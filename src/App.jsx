@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -62,24 +62,32 @@ function App() {
   }
 
   const checkLogin = async () =>{
-    try {
-      // 從 Cookie 取得 token
+        try {
+          const response = await axios.post(`${API_BASE}/api/user/check`);
+          console.log("檢查登入狀態回應：", response);
+          setIsAuth(true);
+          getProducts();
+        } catch (error) {
+          console.log(error.response?.data.message);
+          alert("登入狀態異常，請重新登入");
+          setIsAuth(false);
+        }
+      };
+
+  useEffect(() => {
+    // 從 Cookie 取得 token
       const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("hextoken="))
       ?.split("=")[1];
-      axios.defaults.headers.common["Authorization"] = token;
-
-      const response = await axios.post(`${API_BASE}/api/user/check`);
-      console.log("檢查登入狀態回應：", response);
-      setIsAuth(true);
-      getProducts();
-    } catch (error) {
-      console.log(error.response?.data.message);
-      alert("登入狀態異常，請重新登入");
-      setIsAuth(false);
-    }
-  }
+      if (token) {
+        axios.defaults.headers.common["Authorization"] = token;
+        checkLogin();
+      } else {
+        setIsAuth(false);
+      }
+    },[])
+   
 
   return (
     <>
